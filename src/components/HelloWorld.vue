@@ -1,6 +1,12 @@
 <template>
   <div class="hello">
     <h1>{{ msg }}</h1>
+
+    <h2 v-if="this.isUserLogin">Logout</h2>
+    <h2 @click="userLogin({ phone: '+380508577629', password: 'qwe1qwe1' })">
+      Login
+    </h2>
+
     <p>
       For a guide and recipes on how to configure / customize this project,<br />
       check out the
@@ -104,10 +110,20 @@
 
 <script lang="ts">
 import { Options, Vue } from "vue-class-component";
+import { mapActions, mapState } from "vuex";
 
 @Options({
   props: {
     msg: String,
+  },
+  data() {
+    return {};
+  },
+  computed: {
+    ...mapState("user", ["isUserLogin"]),
+  },
+  methods: {
+    ...mapActions("user", ["userLogin"]),
   },
 })
 export default class HelloWorld extends Vue {
