@@ -1,5 +1,6 @@
 import { ActionTree } from "vuex";
 import { apiURL } from "@/store/variables";
+import store from "@/store/index";
 
 interface loginCredentials {
   phone: string;
@@ -33,16 +34,20 @@ const mutations = {
   },
   deleteTokens(state: userState): void {
     state.accessToken = "";
+    localStorage.removeItem("access_token");
     state.refreshToken = "";
+    localStorage.removeItem("refresh_token");
   },
   setUserStatus(state: userState, status: boolean): void {
     state.isUserLogin = status;
   },
   addAccessToken(state: userState, accessToken: string): void {
     state.accessToken = accessToken;
+    localStorage.setItem("access_token", accessToken);
   },
   addRefreshToken(state: userState, refreshToken: string): void {
     state.refreshToken = refreshToken;
+    localStorage.setItem("refresh_token", refreshToken);
   },
   setMessage(state: userState, message: string): void {
     state.message = message;
@@ -74,6 +79,7 @@ const actions: ActionTree<userState, Record<string, unknown>> = {
     });
     const parsedResponse = await response.json();
     if (response.ok) {
+      console.log("tokens refreshed");
       commit("addAccessToken", parsedResponse.access_token);
       commit("addRefreshToken", parsedResponse.refresh_token);
       commit("setMessage", "tokens successfully refresh");
@@ -121,7 +127,6 @@ const actions: ActionTree<userState, Record<string, unknown>> = {
         Authorization: `Bearer ${state.accessToken}`,
       },
     });
-    const parsedResponse = await response.json();
     if (response.ok) {
       commit("deleteTokens");
       commit("setUserStatus", false);
@@ -131,10 +136,11 @@ const actions: ActionTree<userState, Record<string, unknown>> = {
       commit("setUserStatus", false);
       commit("setMessage", "user logout due to tokens expiration");
     } else {
+      const parsedResponse = await response.json();
       commit("setMessage", `${parsedResponse}`);
     }
   },
-  async userProfile({ commit, state }) {
+  async getUserProfile({ commit, state }) {
     const response = await fetch(`${apiURL}/profile`, {
       method: "GET",
       mode: "cors",
@@ -143,9 +149,15 @@ const actions: ActionTree<userState, Record<string, unknown>> = {
         Authorization: `Bearer ${state.accessToken}`,
       },
     });
-    const parsedResponse = await response.json();
     if (response.ok) {
+      const parsedResponse = await response.json();
       commit("setUserProfile", parsedResponse);
+    } else if (response.status == 401) {
+      await store.dispatch("user/refreshTokens");
+      await store.dispatch("user/getUserProfile");
+    } else {
+      const parsedResponse = await response.json();
+      commit("setMessage", parsedResponse);
     }
   },
 };

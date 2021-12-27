@@ -2,7 +2,12 @@
   <div class="hello">
     <h1>{{ msg }}</h1>
 
-    <h2 v-if="this.isUserLogin">Logout</h2>
+    <h2 v-if="this.isUserLogin" @click="this.getUserProfile">User</h2>
+    <h2 v-if="this.userProfile.name !== ''">
+      Hello, {{ this.userProfile.name }} !!!
+    </h2>
+    <h2 v-if="this.message !== ''">{{ this.message }}</h2>
+    <h2 v-if="this.isUserLogin" @click="userLogout">Logout</h2>
     <h2 @click="userLogin({ phone: '+380508577629', password: 'qwe1qwe1' })">
       Login
     </h2>
@@ -120,10 +125,18 @@ import { mapActions, mapState } from "vuex";
     return {};
   },
   computed: {
-    ...mapState("user", ["isUserLogin"]),
+    ...mapState("user", ["isUserLogin", "message", "userProfile"]),
   },
   methods: {
-    ...mapActions("user", ["userLogin"]),
+    ...mapActions("user", [
+      "userLogin",
+      "userLogout",
+      "getTokensFromLocalStorage",
+      "getUserProfile",
+    ]),
+  },
+  created() {
+    this.getTokensFromLocalStorage();
   },
 })
 export default class HelloWorld extends Vue {
