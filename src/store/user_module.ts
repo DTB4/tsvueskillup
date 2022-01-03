@@ -1,6 +1,5 @@
 import { ActionTree } from "vuex";
 import { apiURL } from "@/store/variables";
-import store from "@/store/index";
 
 interface loginCredentials {
   phone: string;
@@ -10,6 +9,13 @@ interface userProfile {
   phone: string;
   name: string;
 }
+
+interface userRegistration {
+  phone: string;
+  name: string;
+  password: string;
+}
+
 interface userState {
   accessToken: string;
   refreshToken: string;
@@ -140,7 +146,7 @@ const actions: ActionTree<userState, Record<string, unknown>> = {
       commit("setMessage", `${parsedResponse}`);
     }
   },
-  async getUserProfile({ commit, state }) {
+  async getUserProfile({ dispatch, commit, state }) {
     const response = await fetch(`${apiURL}/profile`, {
       method: "GET",
       mode: "cors",
@@ -153,8 +159,30 @@ const actions: ActionTree<userState, Record<string, unknown>> = {
       const parsedResponse = await response.json();
       commit("setUserProfile", parsedResponse);
     } else if (response.status == 401) {
-      await store.dispatch("user/refreshTokens");
-      await store.dispatch("user/getUserProfile");
+      await dispatch("user/refreshTokens");
+      await dispatch("user/getUserProfile");
+    } else {
+      const parsedResponse = await response.json();
+      commit("setMessage", parsedResponse);
+    }
+  },
+  async registerUser({ commit }, registrationForm: userRegistration) {
+    const response = await fetch(`${apiURL}/registration`, {
+      method: "POST",
+      mode: "cors",
+      credentials: "include",
+      headers: {
+        Accept: "*/*",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: registrationForm.name,
+        phone: registrationForm.phone,
+        password: registrationForm.password,
+      }),
+    });
+    if (response.ok) {
+      commit("setMessage", "user successfully registered");
     } else {
       const parsedResponse = await response.json();
       commit("setMessage", parsedResponse);

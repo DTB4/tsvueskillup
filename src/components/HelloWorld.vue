@@ -2,15 +2,47 @@
   <div class="hello">
     <h1>{{ msg }}</h1>
 
-    <h2 v-if="this.isUserLogin" @click="this.getUserProfile">User</h2>
-    <h2 v-if="this.userProfile.name !== ''">
-      Hello, {{ this.userProfile.name }} !!!
+    <h2 v-if="isUserLogin" @click="getUserProfile">User</h2>
+    <h2 v-if="userProfile.name !== ''">
+      Hello, {{ userProfile.name }} !!!
     </h2>
-    <h2 v-if="this.message !== ''">{{ this.message }}</h2>
-    <h2 v-if="this.isUserLogin" @click="userLogout">Logout</h2>
+    <h2 v-if="message !== ''">{{ this.message }}</h2>
+    <h2 v-if="isUserLogin" @click="userLogout">Logout</h2>
     <h2 @click="userLogin({ phone: '+380508577629', password: 'qwe1qwe1' })">
       Login
     </h2>
+    <h2 @click="getCarMovement(1)">Get Car coordinates</h2>
+    <h2 @click="getOrderMovement(333)">Get order coordinates</h2>
+    <h2 @click="getWebSocket(361)">Get websocket</h2>
+    <h2 @click="closeWebsocket">Close Websocket</h2>
+
+    <div class="pagination">
+      <button
+        v-if="previousPage !== 0"
+        @click="getOrderMovementPage({ order_id: 354, cursor: cursors[cursors.length-2], isForward: false })"
+      >
+        Previous
+      </button>
+      <button v-if="previousPage === 0">Previous</button>
+      <button>{{ currentPage }}</button>
+      <button
+        v-if="!lastPage"
+        @click="getOrderMovementPage({ order_id: 354, cursor: cursor, isForward: true })"
+      >
+        Next
+      </button>
+      <button v-if="lastPage">Next</button>
+    </div>
+
+    <div v-for="coordinate in coordinates" :key="coordinate.id">
+      {{ coordinate }}
+    </div>
+
+    <h2 @click="getOrders">Get Orders</h2>
+
+    <div v-for="order in orders" :key="order.id">
+      {{ order }}
+    </div>
 
     <p>
       For a guide and recipes on how to configure / customize this project,<br />
@@ -116,8 +148,10 @@
 <script lang="ts">
 import { Options, Vue } from "vue-class-component";
 import { mapActions, mapState } from "vuex";
+import OrderMove from "@/components/OrderMove.vue";
 
 @Options({
+  components: { OrderMove },
   props: {
     msg: String,
   },
@@ -126,22 +160,37 @@ import { mapActions, mapState } from "vuex";
   },
   computed: {
     ...mapState("user", ["isUserLogin", "message", "userProfile"]),
+    ...mapState("coordinates", [
+      "coordinates",
+      "currentPage",
+      "lastPage",
+      "previousPage",
+      "cursor",
+        "cursors"
+    ]),
+    ...mapState("orders", ["orders"]),
   },
   methods: {
+    ...mapActions("coordinates", [
+      "getOrderMovement",
+      "getCarMovement",
+      "getWebSocket",
+      "closeWebsocket",
+      "getOrderMovementPage",
+    ]),
     ...mapActions("user", [
       "userLogin",
       "userLogout",
       "getTokensFromLocalStorage",
       "getUserProfile",
     ]),
+    ...mapActions("orders", ["getOrders"]),
   },
   created() {
     this.getTokensFromLocalStorage();
   },
 })
-export default class HelloWorld extends Vue {
-  msg!: string;
-}
+export default class HelloWorld extends Vue {}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

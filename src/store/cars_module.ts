@@ -1,6 +1,5 @@
 import { ActionTree } from "vuex";
 import { apiURL } from "@/store/variables";
-import store from "@/store/index";
 
 interface car {
   id: number;
@@ -25,7 +24,7 @@ const mutations = {
   },
 };
 const actions: ActionTree<carsState, Record<string, unknown>> = {
-  async getCars({ commit }) {
+  async getCars({ dispatch, commit }) {
     const response = await fetch(`${apiURL}/showcars`, {
       method: "GET",
       mode: "cors",
@@ -38,10 +37,11 @@ const actions: ActionTree<carsState, Record<string, unknown>> = {
       const parsedResponse = await response.json();
       commit("addCars", parsedResponse);
     } else if (response.status == 401) {
-      await store.dispatch("user/refreshTokens");
+      await dispatch("user/refreshTokens", null, {root:true});
+      await dispatch("getCars");
     } else {
       const parsedResponse = await response.json();
-      console.log(parsedResponse);
+      commit("user/setMessage", parsedResponse, {root:true});
     }
   },
 };
